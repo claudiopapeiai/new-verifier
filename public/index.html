@@ -389,9 +389,7 @@
                 <div class="metrics" id="metrics"></div>
             </div>
         </div>
-    </div>
-
-    <script>
+    </div>  <script>
         async function verifyNews() {
             const input = document.getElementById('newsInput').value.trim();
             
@@ -505,14 +503,22 @@
                     <div class="metric-value">${metriche.tokenTotali}</div>
                     <div class="metric-label">Token Totali</div>
                 </div>
+
+
+
+
+                
                 <div class="metric-item">
-                    <div class="metric-value">${metriche.costoTotale}</div>
+                    <div class="metric-value">${metriche.costoTotale || '$0.000000'}</div>
                     <div class="metric-label">Costo (USD)</div>
                 </div>
                 <div class="metric-item">
-                    <div class="metric-value">${metriche.costoTotaleEuro}</div>
+                    <div class="metric-value">${metriche.costoTotaleEuro || '€0.000000'}</div>
                     <div class="metric-label">Costo (EUR)</div>
                 </div>
+
+
+                
                 <div class="metric-item">
                     <div class="metric-value">${metriche.tempoRisposta}</div>
                     <div class="metric-label">Tempo Risposta</div>

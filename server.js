@@ -11,16 +11,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-console.log('🔑 API Key:', process.env.ANTHROPIC_API_KEY ? 'OK' : 'VUOTA');
+console.log('API Key:', process.env.ANTHROPIC_API_KEY ? 'OK' : 'VUOTA');
 
 let anthropic;
 try {
   anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY
   });
-  console.log('✅ Anthropic OK');
+  console.log('Anthropic OK');
 } catch (error) {
-  console.error('❌ Anthropic:', error.message);
+  console.error('Error:', error.message);
   anthropic = null;
 }
 
@@ -30,6 +30,8 @@ const TOKEN_COSTS = {
 };
 
 app.post('/api/verify', async (req, res) => {
+  let responseTime = 0;
+
   try {
     const { input } = req.body;
     if (!input) return res.status(400).json({ error: 'Input mancante' });
@@ -38,51 +40,78 @@ app.post('/api/verify', async (req, res) => {
       return res.status(500).json({ error: 'API Key mancante' });
     }
 
-    console.log('📤 Invio:', input.substring(0, 80) + '...');
+    console.log('Input:', input.substring(0, 80));
+    const startTime = Date.now();
 
-    const prompt = `Analizza veridicità di: "${input}"
+    const prompt = `Sei un fact-checker professionale. Analizza la seguente affermazione/notizia e fornisci un'analisi dettagliata in formato JSON.
 
-Rispondi SOLO con JSON perfetto:
+AFFERMAZIONE: "${input}"
+
+Fornisci una valutazione completa con questi campi JSON:
+
 {
-  "veridicita": 0-100,
-  "spiegazione": "spiegazione chiara 1-2 frasi",
-  "fonti": [{"nome":"Fonte","tipo":"testata_primaria","affidabilita":85,"url":"https://..."}],
-  "segnali_allerta": [],
-  "contesto": "contesto"
-}`;
+  "veridicita": <numero da 0-100>,
+  "spiegazione": "<analisi dettagliata di 2-3 frasi su perche assegni questo valore>",
+  "fonti": [
+    {
+      "nome": "<nome della fonte>",
+      "tipo": "testata_primaria|testata_secondaria|giornale_online|istituzionale_italia|istituzionale_estero|blog_verificato|forum|social_media|sconosciuto",
+      "affidabilita": <0-100>,
+      "url": "<url se disponibile>"
+    }
+  ],
+  "segnali_allerta": ["<segnale 1>", "<segnale 2>"],
+  "contesto": "<contesto aggiuntivo importante>"
+}
+
+ISTRUZIONI:
+- Veridicita: valuta 0-100 in base a verità, probabilità, prove disponibili
+- Analizza la logica interna dell'affermazione
+- Identifica qualsiasi elemento dubbio o mancante
+- Fornisci segnali di attenzione se ci sono elementi sospetti
+- Fornisci fonti credibili se possibile
+- Sii critico ma giusto
+- Rispondi SOLO con JSON valido, niente altro`;
 
     const message = await anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
-      max_tokens: 800,
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2000,
       messages: [{ role: 'user', content: prompt }]
     });
 
-    // Parsing risposta reale Claude
-    let responseText = message.content[0].text
-      .replace(/``````/g, '')
-      .replace(/^\s+|\s+$/g, '');
+    const endTime = Date.now();
+    responseTime = endTime - startTime;
+
+    let responseText = message.content[0].text.trim();
+    
+    // Rimuovi backtick e spazi
+    responseText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').replace(/^```/g, '').trim();
+
+    console.log('Response:', responseText.substring(0, 150));
 
     let analysisResult;
     try {
       analysisResult = JSON.parse(responseText);
-    } catch {
-      // Fallback se JSON malformato
+      console.log('JSON OK - Veridicita:', analysisResult.veridicita);
+    } catch (e) {
+      console.error('Parse error:', e.message);
+      console.log('Raw response:', responseText.substring(0, 300));
       analysisResult = {
-        veridicita: 75,
-        spiegazione: "Analisi completata. Verifica fonti indipendenti.",
-        fonti: [{nome: "Claude AI", tipo: "testata_primaria", affidabilita: 85, url: "https://anthropic.com"}],
-        segnali_allerta: [],
-        contesto: "Risposta elaborata da Claude AI"
+        veridicita: 50,
+        spiegazione: "Analisi completata da Claude. Verifica fonti indipendenti per conferma.",
+        fonti: [{ nome: "Claude AI", tipo: "testata_primaria", affidabilita: 75, url: "https://anthropic.com" }],
+        segnali_allerta: ["Risposta incompleta - consultare fonti multiple"],
+        contesto: "Valutazione preliminare"
       };
     }
 
-    const inputTokens = message.usage.input_tokens;
-    const outputTokens = message.usage.output_tokens;
+    const inputTokens = message.usage.input_tokens || 0;
+    const outputTokens = message.usage.output_tokens || 0;
     const totalTokens = inputTokens + outputTokens;
     const totalCostUSD = (inputTokens * TOKEN_COSTS.input + outputTokens * TOKEN_COSTS.output);
     const totalCostEUR = totalCostUSD * 0.92;
 
-    console.log('✅ OK:', inputTokens, 'input +', outputTokens, 'output tokens');
+    console.log('Tokens:', inputTokens, '+', outputTokens, '=', totalTokens);
 
     res.json({
       analisi: analysisResult,
@@ -90,13 +119,14 @@ Rispondi SOLO con JSON perfetto:
         tokenInput: inputTokens,
         tokenOutput: outputTokens,
         tokenTotali: totalTokens,
-        costoTotaleUSD: totalCostUSD.toFixed(6),
-        costoTotaleEUR: totalCostEUR.toFixed(6)
+        costoTotale: `$${totalCostUSD.toFixed(6)}`,
+        costoTotaleEuro: `EUR ${totalCostEUR.toFixed(6)}`,
+        tempoRisposta: `${responseTime}ms`
       }
     });
 
   } catch (error) {
-    console.error('💥 ERRORE:', error.message);
+    console.error('Error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -106,5 +136,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log('✅ Server porta ' + PORT);
+  console.log('Server porta ' + PORT);
 });

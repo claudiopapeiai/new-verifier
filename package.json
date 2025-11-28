@@ -7,14 +7,20 @@
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
-  "keywords": ["news", "verification", "ai", "anthropic"],
+  "keywords": [
+    "news",
+    "verification",
+    "ai",
+    "anthropic"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
-    "express": "^4.18.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "groq": "^4.19.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
