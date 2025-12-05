@@ -32,7 +32,7 @@ const TOKEN_COSTS = {
 };
 
 // Rate limiting: 2 verifiche al giorno per browser
-const MAX_REQUESTS_PER_DAY = 2;
+const MAX_REQUESTS_PER_DAY = 10;
 const browserUsage = new Map();
 
 function rateLimitPerBrowser(req, res, next) {
