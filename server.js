@@ -3,6 +3,7 @@ const express = require('express');
 const { Anthropic } = require('@anthropic-ai/sdk');
 const cors = require('cors');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
+app.use(cookieParser(process.env.COOKIE_SECRET || 'fallback-secret-key'));
 
 console.log('API Key:', process.env.ANTHROPIC_API_KEY ? 'OK' : 'VUOTA');
 
@@ -29,7 +31,49 @@ const TOKEN_COSTS = {
   output: 0.015 / 1000
 };
 
-app.post('/api/verify', async (req, res) => {
+// Rate limiting: 2 verifiche al giorno per browser
+const MAX_REQUESTS_PER_DAY = 2;
+const browserUsage = new Map();
+
+function rateLimitPerBrowser(req, res, next) {
+  let clientId = req.signedCookies.clientId;
+  
+  if (!clientId) {
+    clientId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    res.cookie('clientId', clientId, {
+      signed: true,
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: 'strict'
+    });
+  }
+
+  const now = Date.now();
+  const record = browserUsage.get(clientId);
+
+  if (!record) {
+    browserUsage.set(clientId, { count: 1, firstRequestAt: now });
+    return next();
+  }
+
+  const elapsed = now - record.firstRequestAt;
+  if (elapsed > 24 * 60 * 60 * 1000) {
+    browserUsage.set(clientId, { count: 1, firstRequestAt: now });
+    return next();
+  }
+
+  if (record.count >= MAX_REQUESTS_PER_DAY) {
+    return res.status(429).json({
+      error: `Hai raggiunto il limite giornaliero di ${MAX_REQUESTS_PER_DAY} verifiche. Riprova domani.`
+    });
+  }
+
+  record.count += 1;
+  browserUsage.set(clientId, record);
+  next();
+}
+
+app.post('/api/verify', rateLimitPerBrowser, async (req, res) => {
   let responseTime = 0;
 
   try {
@@ -61,7 +105,7 @@ Fornisci una valutazione completa con questi campi JSON:
     }
   ],
   "segnali_allerta": ["<segnale 1>", "<segnale 2>"],
-  "contesto": "<contesto aggiuntivo importante>"
+  "contesto": "testo aggiuntivo importante>"
 }
 
 ISTRUZIONI:
@@ -85,7 +129,7 @@ ISTRUZIONI:
     let responseText = message.content[0].text.trim();
     
     // Rimuovi backtick e spazi
-    responseText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').replace(/^```/g, '').trim();
+    responseText = responseText.replace(/``````\n?/g, '').replace(/^```
 
     console.log('Response:', responseText.substring(0, 150));
 
@@ -138,3 +182,4 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log('Server porta ' + PORT);
 });
+
