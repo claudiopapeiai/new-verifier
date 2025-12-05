@@ -135,9 +135,9 @@ ISTRUZIONI:
     if (jsonMatch) {
       responseText = jsonMatch[0];
     } else {
-      responseText = responseText.replace(/^```
+      
       responseText = responseText.replace(/^```\s*/, '');
-      responseText = responseText.replace(/```
+    
       if (responseText.toLowerCase().startsWith('json')) {
         responseText = responseText.substring(4).trim();
       }
