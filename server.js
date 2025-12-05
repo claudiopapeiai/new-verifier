@@ -91,6 +91,8 @@ app.post('/api/verify', rateLimitPerBrowser, async (req, res) => {
 
 AFFERMAZIONE: "${input}"
 
+IMPORTANTE: Rispondi SOLO con l'oggetto JSON puro, senza wrapper markdown, senza backtick, senza prefissi come "json".
+
 Fornisci una valutazione completa con questi campi JSON:
 
 {
@@ -128,17 +130,19 @@ ISTRUZIONI:
 
     let responseText = message.content[0].text.trim();
 
-    // Pulizia backtick senza regex complessa
-if (responseText.startsWith('json')) {
-  responseText = responseText.slice(7);
-}
-if (responseText.startsWith('```')) {
-  responseText = responseText.slice(3);
-}
-if (responseText.endsWith('```')) {
-  responseText = responseText.slice(0, -3);
-}
-responseText = responseText.trim();
+    // Pulizia robusta della risposta
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      responseText = jsonMatch[0];
+    } else {
+      responseText = responseText.replace(/^```
+      responseText = responseText.replace(/^```\s*/, '');
+      responseText = responseText.replace(/```
+      if (responseText.toLowerCase().startsWith('json')) {
+        responseText = responseText.substring(4).trim();
+      }
+      responseText = responseText.trim();
+    }
 
     console.log('Response:', responseText.substring(0, 150));
 
