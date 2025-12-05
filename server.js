@@ -129,16 +129,16 @@ ISTRUZIONI:
     let responseText = message.content[0].text.trim();
 
     // Pulizia backtick senza regex complessa
-    if (responseText.startsWith('json')) {
-      responseText = responseText.slice(7);
-    }
-    if (responseText.startsWith('```
-      responseText = responseText.slice(3);
-    }
-    if (responseText.endsWith('```')) {
-      responseText = responseText.slice(0, -3);
-    }
-    responseText = responseText.trim();
+if (responseText.startsWith('json')) {
+  responseText = responseText.slice(7);
+}
+if (responseText.startsWith('```')) {
+  responseText = responseText.slice(3);
+}
+if (responseText.endsWith('```')) {
+  responseText = responseText.slice(0, -3);
+}
+responseText = responseText.trim();
 
     console.log('Response:', responseText.substring(0, 150));
 
