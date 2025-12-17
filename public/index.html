@@ -315,6 +315,18 @@
             display: none;
         }
 
+        /* ✅ Disclaimer in fondo alla pagina */
+        .disclaimer {
+            margin: 0 40px 30px 40px;
+            padding: 15px;
+            background: #fff8db;
+            border-left: 5px solid #f1c40f;
+            color: #6b5e00;
+            font-size: 14px;
+            line-height: 1.4;
+            border-radius: 8px;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 1.8em;
@@ -326,6 +338,14 @@
             
             .metrics {
                 grid-template-columns: 1fr;
+            }
+
+            .error {
+                margin: 20px;
+            }
+
+            .disclaimer {
+                margin: 0 20px 20px 20px;
             }
         }
     </style>
@@ -389,7 +409,18 @@
                 <div class="metrics" id="metrics"></div>
             </div>
         </div>
-    </div>  <script>
+
+        <!-- ✅ Disclaimer inserito sotto i risultati -->
+        <div class="disclaimer">
+            <strong>⚠️ Disclaimer:</strong>
+            I risultati forniti da questo servizio sono valutazioni automatiche basate
+            sull’analisi statistica della fonte e su modelli di intelligenza artificiale.
+            Non rappresentano una verifica giornalistica, legale o fattuale dei contenuti.
+            L’utente è invitato a consultare sempre fonti ufficiali prima di trarre conclusioni.
+        </div>
+    </div>
+
+    <script>
         async function verifyNews() {
             const input = document.getElementById('newsInput').value.trim();
             
@@ -503,11 +534,6 @@
                     <div class="metric-value">${metriche.tokenTotali}</div>
                     <div class="metric-label">Token Totali</div>
                 </div>
-
-
-
-
-                
                 <div class="metric-item">
                     <div class="metric-value">${metriche.costoTotale || '$0.000000'}</div>
                     <div class="metric-label">Costo (USD)</div>
@@ -516,9 +542,6 @@
                     <div class="metric-value">${metriche.costoTotaleEuro || '€0.000000'}</div>
                     <div class="metric-label">Costo (EUR)</div>
                 </div>
-
-
-                
                 <div class="metric-item">
                     <div class="metric-value">${metriche.tempoRisposta}</div>
                     <div class="metric-label">Tempo Risposta</div>
@@ -553,7 +576,7 @@
 
         function clearResults() {
             document.getElementById('newsInput').value = '';
-            document.getElementById('results').style.display = 'none';
+            document.getElementById('results').display = 'none';
             document.getElementById('error').style.display = 'none';
             document.getElementById('loading').style.display = 'none';
         }
