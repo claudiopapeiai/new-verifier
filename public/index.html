@@ -44,6 +44,96 @@
             font-size: 1.1em;
         }
 
+        /* ✅ NUOVI STILI DONAZIONI */
+        .donations-section {
+            padding: 30px 40px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-top: 1px solid #dee2e6;
+            text-align: center;
+        }
+        
+        .donation-title {
+            color: #495057;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .donation-subtitle {
+            color: #6c757d;
+            font-size: 1em;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        
+        .amount-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .amount-btn {
+            padding: 12px 20px;
+            border: 2px solid #0070ba;
+            background: white;
+            color: #0070ba;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s;
+            min-width: 60px;
+        }
+        
+        .amount-btn:hover {
+            background: #0070ba;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .amount-btn.selected {
+            background: #0070ba;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0,112,186,0.3);
+        }
+        
+        .custom-amount {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .custom-input {
+            width: 100px;
+            padding: 12px;
+            border: 2px solid #0070ba;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .custom-input:focus {
+            outline: none;
+            border-color: #005ea6;
+            box-shadow: 0 0 0 3px rgba(0,112,186,0.2);
+        }
+        
+        .paypal-container {
+            max-width: 400px;
+            margin: 0 auto 20px;
+        }
+        
+        .thank-you {
+            color: #28a745;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
         .input-section {
             padding: 40px;
         }
@@ -315,7 +405,6 @@
             display: none;
         }
 
-        /* ✅ Disclaimer in fondo alla pagina */
         .disclaimer {
             margin: 0 40px 30px 40px;
             padding: 15px;
@@ -347,6 +436,14 @@
             .disclaimer {
                 margin: 0 20px 20px 20px;
             }
+            
+            .donations-section {
+                padding: 25px 20px;
+            }
+            .amount-selector {
+                flex-direction: column;
+                align-items: center;
+            }
         }
     </style>
 </head>
@@ -355,6 +452,33 @@
         <div class="header">
             <h1>🔍 Verificatore di Notizie AI</h1>
             <p>Analisi intelligente della veridicità delle informazioni</p>
+        </div>
+
+        <!-- ✅ SEZIONE DONAZIONI CON IMPORTI PERSONALIZZABILI -->
+        <div class="donations-section">
+            <div class="donation-title">🍕 Supporta il progetto!</div>
+            <div class="donation-subtitle">
+                Qualsiasi cifra aiuta a mantenere il servizio gratuito per tutti
+            </div>
+            
+            <div class="amount-selector">
+                <button class="amount-btn selected" data-amount="1.00">€1</button>
+                <button class="amount-btn" data-amount="2.00">€2</button>
+                <button class="amount-btn" data-amount="5.00">€5</button>
+                <button class="amount-btn" data-amount="10.00">€10</button>
+            </div>
+            
+            <div class="custom-amount">
+                <span>Oppure</span>
+                <input type="number" class="custom-input" id="customAmount" 
+                       min="0.10" max="100" step="0.01" value="1.00">
+                <span>personalizzato</span>
+            </div>
+            
+            <div id="paypal-button-container" class="paypal-container"></div>
+            <div class="thank-you" id="thank-you-message" style="display: none;">
+                🙏 Grazie mille per il tuo supporto! ❤️
+            </div>
         </div>
 
         <div class="input-section">
@@ -410,17 +534,72 @@
             </div>
         </div>
 
-        <!-- ✅ Disclaimer inserito sotto i risultati -->
         <div class="disclaimer">
             <strong>⚠️ Disclaimer:</strong>
             I risultati forniti da questo servizio sono valutazioni automatiche basate
-            sull’analisi statistica della fonte e su modelli di intelligenza artificiale.
+            sull'analisi statistica della fonte e su modelli di intelligenza artificiale.
             Non rappresentano una verifica giornalistica, legale o fattuale dei contenuti.
-            L’utente è invitato a consultare sempre fonti ufficiali prima di trarre conclusioni.
+            L'utente è invitato a consultare sempre fonti ufficiali prima di trarre conclusioni.
         </div>
     </div>
 
+    <!-- ✅ PAYPAL SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id=https://www.paypal.com/donate/?business=YRKHL9B56MRTA&no_recurring=0&item_name=Solo+per+alimentare+l%27AI+bastano+ogni+interrogazione+costa+qualche+millesimo+di+euro+quindi+bastano+pochi+centesimi.&currency_code=EUR
+    &currency=EUR&disable-funding=card"></script>
+
     <script>
+        // ✅ LOGICA DONAZIONI PERSONALIZZABILI
+        let selectedAmount = '1.00';
+        
+        document.querySelectorAll('.amount-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedAmount = this.dataset.amount;
+                document.getElementById('customAmount').value = selectedAmount;
+            });
+        });
+        
+        document.getElementById('customAmount').addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            if (value >= 0.10 && value <= 100) {
+                selectedAmount = value.toFixed(2);
+                document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'));
+            }
+        });
+
+        paypal.Buttons({
+            style: {
+                shape: 'rect',
+                color: 'blue',
+                layout: 'vertical',
+                label: 'paypal'
+            },
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: {
+                            value: selectedAmount
+                        },
+                        description: `Donazione a Verificatore di Notizie AI (€${selectedAmount})`
+                    }]
+                });
+            },
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(details) {
+                    document.getElementById('thank-you-message').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('thank-you-message').style.display = 'none';
+                    }, 5000);
+                    console.log('Donazione:', selectedAmount + '€ da', details.payer.name.given_name);
+                });
+            },
+            onError: function(err) {
+                console.log('Errore PayPal:', err);
+            }
+        }).render('#paypal-button-container');
+
+        // ✅ TUO JAVASCRIPT ESISTENTE
         async function verifyNews() {
             const input = document.getElementById('newsInput').value.trim();
             
@@ -576,7 +755,7 @@
 
         function clearResults() {
             document.getElementById('newsInput').value = '';
-            document.getElementById('results').display = 'none';
+            document.getElementById('results').style.display = 'none';
             document.getElementById('error').style.display = 'none';
             document.getElementById('loading').style.display = 'none';
         }
