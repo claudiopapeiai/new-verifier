@@ -1,208 +1,664 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Verificatore di Notizie AI</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificatore di Notizie AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-    font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;
-    background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-    min-height:100vh;padding:20px
-}
-.container{
-    max-width:900px;margin:auto;background:#fff;
-    border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);
-    overflow:hidden
-}
-.header{
-    background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-    color:#fff;padding:30px;text-align:center
-}
-.header h1{font-size:2.4em;margin-bottom:10px}
-.header p{opacity:.9;font-size:1.1em}
-.input-section{padding:40px}
-label{display:block;margin-bottom:10px;font-weight:600}
-textarea{
-    width:100%;min-height:120px;padding:15px;
-    border:2px solid #e0e0e0;border-radius:10px;
-    font-size:1em
-}
-textarea:focus{outline:none;border-color:#667eea}
-.button-group{display:flex;gap:15px;margin-top:20px}
-button{
-    flex:1;padding:15px;border:none;border-radius:10px;
-    font-size:1.1em;font-weight:600;cursor:pointer
-}
-.btn-verify{background:#667eea;color:#fff}
-.btn-clear{background:#f0f0f0}
-.loading{display:none;text-align:center;padding:40px}
-.spinner{
-    width:50px;height:50px;border:4px solid #eee;
-    border-top:4px solid #667eea;border-radius:50%;
-    animation:spin 1s linear infinite;margin:auto
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-.results{display:none;padding:40px;background:#f9f9f9}
-.score-circle{
-    width:150px;height:150px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    font-size:3em;color:#fff;margin:auto
-}
-.section{
-    background:#fff;padding:25px;margin-top:20px;
-    border-radius:15px
-}
-.error{
-    display:none;background:#f8d7da;color:#721c24;
-    padding:15px;margin:20px;border-radius:10px
-}
-.disclaimer{
-    margin:30px;padding:15px;background:#fff8db;
-    border-left:5px solid #f1c40f;font-size:14px
-}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-/* ===== DONAZIONE FLOTTANTE ===== */
-.donate-fab{
-    position:fixed;right:18px;bottom:18px;
-    width:44px;height:44px;border-radius:10px;
-    background:#fff;box-shadow:0 10px 25px rgba(0,0,0,.25);
-    display:flex;align-items:center;justify-content:center;
-    cursor:pointer;z-index:9999
-}
-.donate-pop{
-    position:fixed;right:18px;bottom:70px;
-    width:280px;background:#fff;border-radius:14px;
-    box-shadow:0 18px 40px rgba(0,0,0,.3);
-    padding:12px;display:none;z-index:9999
-}
-.donate-pill{
-    padding:8px 10px;border-radius:999px;
-    background:#f2f2f2;border:1px solid #ddd;
-    cursor:pointer;font-weight:700;font-size:13px
-}
-.donate-pill.active{background:#0070ba;color:#fff}
-.donate-input{
-    width:100%;padding:10px;border-radius:10px;
-    border:1px solid #ddd;font-weight:700
-}
-.donate-btn{
-    width:100%;padding:10px;margin-top:8px;
-    border:none;border-radius:10px;
-    background:#ffc439;font-weight:800;cursor:pointer
-}
-</style>
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 1.1em; }
+
+        .input-section { padding: 40px; }
+        .input-group { margin-bottom: 20px; }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        textarea { min-height: 120px; resize: vertical; }
+
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group { display: flex; gap: 15px; }
+
+        button {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-verify {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-verify:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn-verify:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .btn-clear { background: #f0f0f0; color: #333; }
+        .btn-clear:hover { background: #e0e0e0; }
+
+        .loading { text-align: center; padding: 40px; display: none; }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .results { padding: 40px; display: none; background: #f9f9f9; }
+
+        .credibility-score {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            font-weight: bold;
+            color: white;
+            position: relative;
+        }
+
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            top: -10px; left: -10px; right: -10px; bottom: -10px;
+            border-radius: 50%;
+            opacity: 0.2;
+            background: inherit;
+        }
+
+        .score-label { font-size: 1.3em; color: #666; margin-top: 10px; }
+
+        .section {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section h3::before { content: '▶'; font-size: 0.8em; }
+
+        .explanation { line-height: 1.8; color: #444; }
+
+        .sources { display: grid; gap: 15px; }
+
+        .source-item {
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .source-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .source-name { font-weight: 600; color: #333; font-size: 1.05em; }
+
+        .source-reliability {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .source-type { color: #666; font-size: 0.95em; margin-bottom: 5px; }
+
+        .source-url {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+        .source-url:hover { text-decoration: underline; }
+
+        .alerts { display: flex; flex-direction: column; gap: 10px; }
+
+        .alert-item {
+            padding: 12px 15px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 8px;
+            color: #856404;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .metric-item {
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        .metric-label { color: #666; font-size: 0.9em; }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 40px;
+            display: none;
+        }
+
+        .disclaimer {
+            margin: 0 40px 30px 40px;
+            padding: 15px;
+            background: #fff8db;
+            border-left: 5px solid #f1c40f;
+            color: #6b5e00;
+            font-size: 14px;
+            line-height: 1.4;
+            border-radius: 8px;
+        }
+
+        /* ===========================
+           DONAZIONI: PICCOLO QUADRATINO
+           =========================== */
+        .donate-fab {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.92);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.22);
+            border: 1px solid rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 9999;
+            user-select: none;
+        }
+        .donate-fab:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.26);
+        }
+        .donate-fab span {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .donate-popover {
+            position: fixed;
+            right: 18px;
+            bottom: 72px;
+            width: 280px;
+            background: rgba(255,255,255,0.98);
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 14px;
+            box-shadow: 0 18px 50px rgba(0,0,0,0.25);
+            padding: 12px;
+            z-index: 9999;
+            display: none;
+        }
+
+        .donate-title { font-weight: 700; color: #333; margin-bottom: 6px; }
+        .donate-note { font-size: 13px; color: #555; line-height: 1.35; margin-bottom: 10px; }
+
+        .donate-amounts { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .donate-pill {
+            padding: 8px 10px;
+            border-radius: 999px;
+            background: #f2f2f2;
+            border: 1px solid #e6e6e6;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .donate-pill.active {
+            background: #0070ba;
+            border-color: #0070ba;
+            color: white;
+        }
+
+        .donate-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .donate-input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-weight: 700;
+        }
+
+        .donate-actions { display: flex; gap: 8px; }
+        .donate-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 800;
+        }
+        .donate-btn-primary { background: #ffc439; }
+        .donate-btn-secondary { background: #f0f0f0; }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8em; }
+            .button-group { flex-direction: column; }
+            .metrics { grid-template-columns: 1fr; }
+            .error { margin: 20px; }
+            .disclaimer { margin: 0 20px 20px 20px; }
+            .donate-popover { right: 12px; left: 12px; width: auto; }
+            .donate-fab { right: 12px; bottom: 12px; }
+        }
+    </style>
 </head>
-
 <body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Verificatore di Notizie AI</h1>
+            <p>Analisi intelligente della veridicità delle informazioni</p>
+        </div>
 
-<div class="container">
-<div class="header">
-<h1>🔍 Verificatore di Notizie AI</h1>
-<p>Analisi intelligente della veridicità delle informazioni</p>
-</div>
+        <div class="input-section">
+            <div class="input-group">
+                <label for="newsInput">Inserisci la notizia o l'URL da verificare:</label>
+                <textarea id="newsInput" placeholder="Incolla qui il testo della notizia oppure l'URL completo dell'articolo..."></textarea>
+            </div>
 
-<div class="input-section">
-<label>Inserisci notizia o URL</label>
-<textarea id="newsInput"></textarea>
-<div class="button-group">
-<button class="btn-verify" onclick="verifyNews()">Verifica</button>
-<button class="btn-clear" onclick="clearResults()">Cancella</button>
-</div>
-</div>
+            <div class="button-group">
+                <button class="btn-verify" onclick="verifyNews()">Verifica Notizia</button>
+                <button class="btn-clear" onclick="clearResults()">Cancella</button>
+            </div>
+        </div>
 
-<div class="loading" id="loading">
-<div class="spinner"></div>
-<p>Analisi in corso...</p>
-</div>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analisi in corso con intelligenza artificiale...</p>
+        </div>
 
-<div class="error" id="error"></div>
+        <div class="error" id="error"></div>
 
-<div class="results" id="results">
-<div class="score-circle" id="scoreCircle"><span id="scoreValue">0%</span></div>
-<div class="section"><p id="explanation"></p></div>
-</div>
+        <div class="results" id="results">
+            <div class="credibility-score">
+                <div class="score-circle" id="scoreCircle">
+                    <span id="scoreValue">0%</span>
+                </div>
+                <div class="score-label">Indice di Veridicità</div>
+            </div>
 
-<div class="disclaimer">
-<strong>⚠️ Disclaimer:</strong>
-Valutazione automatica basata su AI e statistiche delle fonti.
-Non è una verifica giornalistica o legale.
-</div>
-</div>
+            <div class="section">
+                <h3>Spiegazione</h3>
+                <p class="explanation" id="explanation"></p>
+            </div>
 
-<!-- DONAZIONE -->
-<div class="donate-fab"
-     title="Supporta i costi AI (anche 0,10€)"
-     onclick="toggleDonate()">☕</div>
+            <div class="section">
+                <h3>Fonti Analizzate</h3>
+                <div class="sources" id="sources"></div>
+            </div>
 
-<div class="donate-pop" id="donatePop">
-<p><strong>Supporta i costi AI</strong></p>
-<p style="font-size:13px">Anche 0,10€ aiutano</p>
+            <div class="section" id="alertsSection" style="display: none;">
+                <h3>⚠️ Segnali di Allerta</h3>
+                <div class="alerts" id="alerts"></div>
+            </div>
 
-<div style="display:flex;gap:6px;margin:6px 0">
-<button class="donate-pill active" onclick="setAmt('0.10')">€0,10</button>
-<button class="donate-pill" onclick="setAmt('0.50')">€0,50</button>
-<button class="donate-pill" onclick="setAmt('1.00')">€1</button>
-</div>
+            <div class="section" id="contextSection" style="display: none;">
+                <h3>Contesto</h3>
+                <p class="explanation" id="context"></p>
+            </div>
 
-<input id="donateVal" class="donate-input" type="number" min="0.10" step="0.01" value="0.10">
-<button class="donate-btn" onclick="goPayPal()">Dona con PayPal</button>
-</div>
+            <div class="section">
+                <h3>Metriche di Elaborazione</h3>
+                <div class="metrics" id="metrics"></div>
+            </div>
+        </div>
 
-<script>
-let donateAmount="0.10";
+        <div class="disclaimer">
+            <strong>⚠️ Disclaimer:</strong>
+            I risultati forniti da questo servizio sono valutazioni automatiche basate
+            sull'analisi statistica della fonte e su modelli di intelligenza artificiale.
+            Non rappresentano una verifica giornalistica, legale o fattuale dei contenuti.
+            L'utente è invitato a consultare sempre fonti ufficiali prima di trarre conclusioni.
+        </div>
+    </div>
 
-function toggleDonate(){
-    const p=document.getElementById("donatePop");
-    p.style.display=p.style.display==="block"?"none":"block";
-}
+    <!-- ✅ Quadratino discreto (floating) -->
+    <div class="donate-fab" id="donateFab" title="Supporta il progetto" onclick="toggleDonate()">
+        <span>☕</span>
+    </div>
 
-function setAmt(v){
-    donateAmount=v;
-    document.getElementById("donateVal").value=v;
-    document.querySelectorAll(".donate-pill").forEach(b=>b.classList.remove("active"));
-    event.target.classList.add("active");
-}
+    <!-- ✅ Mini-finestra discreta -->
+    <div class="donate-popover" id="donatePopover">
+        <div class="donate-title">Supporta i costi AI</div>
+        <div class="donate-note">
+            Anche <strong>0,10€</strong> aiutano a coprire l’uso dell’AI.
+        </div>
 
-function goPayPal(){
-    let raw=document.getElementById("donateVal").value.replace(",",".");
-    let v=parseFloat(raw);
-    if(isNaN(v)||v<0.10)v=0.10;
-    donateAmount=v.toFixed(2);
-    document.getElementById("donateVal").value=donateAmount;
+        <div class="donate-amounts">
+            <button class="donate-pill active" data-amt="0.10" onclick="selectAmt(event)">€0,10</button>
+            <button class="donate-pill" data-amt="0.25" onclick="selectAmt(event)">€0,25</button>
+            <button class="donate-pill" data-amt="0.50" onclick="selectAmt(event)">€0,50</button>
+            <button class="donate-pill" data-amt="1.00" onclick="selectAmt(event)">€1</button>
+        </div>
 
-    const url="https://www.paypal.com/donate/?business=YRKHL9B56MRTA&currency_code=EUR";
-    window.open(url,"_blank","noopener,noreferrer");
-}
+        <div class="donate-row">
+            <input class="donate-input" id="donateCustom" type="number" min="0.10" step="0.01" value="0.10" aria-label="Importo donazione (EUR)">
+        </div>
 
-async function verifyNews(){
-    const t=document.getElementById("newsInput").value.trim();
-    if(!t){showError("Inserisci una notizia");return;}
-    document.getElementById("loading").style.display="block";
-    try{
-        const r=await fetch("/api/verify",{method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({input:t})});
-        const d=await r.json();
-        document.getElementById("scoreValue").textContent=d.analisi.veridicita+"%";
-        document.getElementById("explanation").textContent=d.analisi.spiegazione;
-        document.getElementById("results").style.display="block";
-    }catch(e){showError(e.message)}
-    document.getElementById("loading").style.display="none";
-}
+        <div class="donate-actions">
+            <button class="donate-btn donate-btn-primary" onclick="goPayPal()">Dona</button>
+            <button class="donate-btn donate-btn-secondary" onclick="toggleDonate()">Chiudi</button>
+        </div>
+    </div>
 
-function showError(m){
-    const e=document.getElementById("error");
-    e.textContent=m;e.style.display="block";
-}
+    <script>
+        // ======================
+        // DONAZIONI (link PayPal)
+        // ======================
+        let donateAmount = "0.10";
 
-function clearResults(){
-    document.getElementById("newsInput").value="";
-    document.getElementById("results").style.display="none";
-}
-</script>
+        function toggleDonate() {
+            const el = document.getElementById('donatePopover');
+            el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+        }
 
+        // chiudi cliccando fuori
+        document.addEventListener('click', function(e) {
+            const pop = document.getElementById('donatePopover');
+            const fab = document.getElementById('donateFab');
+            if (!pop || !fab) return;
+
+            const isOpen = pop.style.display === 'block';
+            if (!isOpen) return;
+
+            const clickInside = pop.contains(e.target) || fab.contains(e.target);
+            if (!clickInside) pop.style.display = 'none';
+        });
+
+        function selectAmt(e) {
+            const btn = e.currentTarget;
+            document.querySelectorAll('.donate-pill').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            donateAmount = btn.dataset.amt;
+            document.getElementById('donateCustom').value = donateAmount;
+        }
+
+        function goPayPal() {
+            const v = parseFloat(document.getElementById('donateCustom').value || "0.10");
+            if (isNaN(v) || v < 0.10) {
+                alert("Importo minimo: 0,10€");
+                return;
+            }
+            donateAmount = v.toFixed(2);
+
+            // ✅ INCOLLA QUI IL TUO LINK PAYPAL (PayPal.me o paypal.com/donate)
+            const PAYPAL_BASE_URL = "https://www.paypal.com/donate/?business=YRKHL9B56MRTA&no_recurring=0&item_name=Ogni+interrogazione+con+AI+costa+qualche+millesimo+di+euro+quindi+bastano+pochi+centesimi+per+alimentare+il+progetto.&currency_code=EUR";
+            // Se è PayPal.me, spesso si può precompilare importo aggiungendo /<amount>EUR
+            // Esempio: https://www.paypal.me/tuonome/0.10EUR
+            let url = PAYPAL_BASE_URL;
+
+            if (PAYPAL_BASE_URL.includes("paypal.me")) {
+                // evita doppio slash
+                url = PAYPAL_BASE_URL.replace(/\/$/, "") + "/" + donateAmount + "EUR";
+            }
+
+            window.open(url, "_blank", "noopener,noreferrer");
+        }
+
+        // ======================
+        // TUO CODICE ESISTENTE
+        // ======================
+        async function verifyNews() {
+            const input = document.getElementById('newsInput').value.trim();
+
+            if (!input) {
+                showError('Per favore inserisci una notizia o un URL da verificare.');
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.querySelector('.btn-verify').disabled = true;
+
+            try {
+                const response = await fetch('/api/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Errore nella richiesta');
+                }
+
+                displayResults(data);
+
+            } catch (error) {
+                showError('Errore: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.querySelector('.btn-verify').disabled = false;
+            }
+        }
+
+        function displayResults(data) {
+            const { analisi, metriche } = data;
+
+            const score = analisi.veridicita;
+            const scoreCircle = document.getElementById('scoreCircle');
+            const scoreValue = document.getElementById('scoreValue');
+
+            scoreValue.textContent = score + '%';
+
+            let color;
+            if (score >= 80) color = '#4caf50';
+            else if (score >= 60) color = '#8bc34a';
+            else if (score >= 40) color = '#ffc107';
+            else if (score >= 20) color = '#ff9800';
+            else color = '#f44336';
+
+            scoreCircle.style.background = color;
+
+            document.getElementById('explanation').textContent = analisi.spiegazione;
+
+            const sourcesContainer = document.getElementById('sources');
+            sourcesContainer.innerHTML = '';
+
+            if (analisi.fonti && analisi.fonti.length > 0) {
+                analisi.fonti.forEach(fonte => {
+                    const sourceDiv = document.createElement('div');
+                    sourceDiv.className = 'source-item';
+                    sourceDiv.innerHTML = `
+                        <div class="source-header">
+                            <span class="source-name">${fonte.nome}</span>
+                            <span class="source-reliability">${fonte.affidabilita}%</span>
+                        </div>
+                        <div class="source-type">Tipo: ${formatSourceType(fonte.tipo)}</div>
+                        ${fonte.url ? `<a href="${fonte.url}" target="_blank" rel="noopener noreferrer" class="source-url">${fonte.url}</a>` : ''}
+                    `;
+                    sourcesContainer.appendChild(sourceDiv);
+                });
+            }
+
+            if (analisi.segnali_allerta && analisi.segnali_allerta.length > 0) {
+                document.getElementById('alertsSection').style.display = 'block';
+                const alertsContainer = document.getElementById('alerts');
+                alertsContainer.innerHTML = '';
+
+                analisi.segnali_allerta.forEach(alert => {
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert-item';
+                    alertDiv.textContent = alert;
+                    alertsContainer.appendChild(alertDiv);
+                });
+            } else {
+                document.getElementById('alertsSection').style.display = 'none';
+            }
+
+            if (analisi.contesto) {
+                document.getElementById('contextSection').style.display = 'block';
+                document.getElementById('context').textContent = analisi.contesto;
+            } else {
+                document.getElementById('contextSection').style.display = 'none';
+            }
+
+            const metricsContainer = document.getElementById('metrics');
+            metricsContainer.innerHTML = `
+                <div class="metric-item">
+                    <div class="metric-value">${metriche.tokenInput}</div>
+                    <div class="metric-label">Token Input</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">${metriche.tokenOutput}</div>
+                    <div class="metric-label">Token Output</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">${metriche.tokenTotali}</div>
+                    <div class="metric-label">Token Totali</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">${metriche.costoTotale || '$0.000000'}</div>
+                    <div class="metric-label">Costo (USD)</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">${metriche.costoTotaleEuro || '€0.000000'}</div>
+                    <div class="metric-label">Costo (EUR)</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">${metriche.tempoRisposta}</div>
+                    <div class="metric-label">Tempo Risposta</div>
+                </div>
+            `;
+
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function formatSourceType(type) {
+            const types = {
+                'istituzionale_italia': 'Fonte Istituzionale Italiana',
+                'istituzionale_estero': 'Fonte Istituzionale Estera',
+                'testata_primaria': 'Testata Giornalistica Primaria',
+                'testata_secondaria': 'Testata Giornalistica Secondaria',
+                'giornale_online': 'Giornale Online',
+                'blog_verificato': 'Blog Verificato',
+                'forum': 'Forum/Discussione',
+                'social_media': 'Social Media',
+                'sconosciuto': 'Fonte Sconosciuta'
+            };
+            return types[type] || type;
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            errorDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function clearResults() {
+            document.getElementById('newsInput').value = '';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        document.getElementById('newsInput').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') verifyNews();
+        });
+    </script>
 </body>
 </html>
